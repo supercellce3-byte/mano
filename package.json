@@ -1,0 +1,15 @@
+{
+  "name": "seanime-root",
+  "private": true,
+  "workspaces": [
+    "seanime-web"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=seanime-web",
+    "dev": "npm run dev --workspace=seanime-web"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "jotai": "^2.18.0"
+  }
+}
