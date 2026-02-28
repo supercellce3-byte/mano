@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player do Blogger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        .player-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .player-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+        }
+        
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff4444;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .video-info {
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .video-info h2 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-item label {
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .info-item span, .info-item a {
+            color: #333;
+            word-break: break-all;
+        }
+        
+        .info-item a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .info-item a:hover {
+            text-decoration: underline;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .thumbnail-preview {
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .thumbnail-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 20px; color: #333;">🎬 Player do Blogger</h1>
+        
+        <div class="controls">
+            <button onclick="loadVideo()">📺 Carregar Vídeo</button>
+            <button onclick="showThumbnail()">🖼️ Mostrar Thumbnail</button>
+            <button onclick="extractDirectLink()">🔗 Extrair Link Direto</button>
+        </div>
+        
+        <div class="player-container" id="playerContainer">
+            <div class="loading">Pronto para carregar o vídeo...</div>
+        </div>
+        
+        <div class="thumbnail-preview" id="thumbnailContainer" style="display: none;">
+            <img id="thumbnailImage" src="" alt="Thumbnail do vídeo">
+        </div>
+        
+        <div class="video-info" id="videoInfo">
+            <h2>📋 Informações do Vídeo</h2>
+            <div id="infoContent">
+                <div class="info-item">
+                    <label>Status</label>
+                    <span>Aguardando carregamento...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função para carregar o vídeo
+        async function loadVideo() {
+            const container = document.getElementById('playerContainer');
+            const infoDiv = document.getElementById('infoContent');
+            
+            container.innerHTML = '<div class="loading">Carregando vídeo...</div>';
+            
+            try {
+                // Buscar informações do vídeo via API
+                const response = await fetch('/api/video-info');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const video = data.data;
+                    
+                    // Atualizar informações
+                    infoDiv.innerHTML = `
+                        <div class="info-item">
+                            <label>Video ID</label>
+                            <span>${video.videoId || 'Não encontrado'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Título</label>
+                            <span>${video.title || 'Vídeo do Blogger'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Thumbnail</label>
+                            <a href="${video.thumbnail}" target="_blank">${video.thumbnail}</a>
+                        </div>
+                        <div class="info-item">
+                            <label>URL do Player</label>
+                            <a href="${video.embedUrl}" target="_blank">Abrir no YouTube</a>
+                        </div>
+                    `;
+                    
+                    // Criar iframe do YouTube
+                    if (video.embedUrl) {
+                        container.innerHTML = `<iframe src="${video.embedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+                    } else if (video.videoId) {
+                        // Fallback: criar embed manualmente
+                        const embedUrl = `https://www.youtube.com/embed/${video.videoId}?enablejsapi=1&autoplay=1`;
+                        container.innerHTML = `<iframe src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+                    } else {
+                        throw new Error('Não foi possível encontrar o vídeo');
+                    }
+                    
+                    // Esconder thumbnail se estiver visível
+                    document.getElementById('thumbnailContainer').style.display = 'none';
+                    
+                } else {
+                    throw new Error('Dados não encontrados');
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                container.innerHTML = `<div class="error">❌ Erro ao carregar vídeo: ${error.message}</div>`;
+            }
+        }
+        
+        // Função para mostrar a thumbnail
+        async function showThumbnail() {
+            const thumbnailContainer = document.getElementById('thumbnailContainer');
+            const playerContainer = document.getElementById('playerContainer');
+            
+            try {
+                const response = await fetch('/api/video-info');
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.thumbnail) {
+                    const img = document.getElementById('thumbnailImage');
+                    img.src = data.data.thumbnail;
+                    thumbnailContainer.style.display = 'block';
+                    playerContainer.innerHTML = '<div class="loading">Thumbnail carregada abaixo</div>';
+                }
+            } catch (error) {
+                alert('Erro ao carregar thumbnail');
+            }
+        }
+        
+        // Função para extrair link direto (se disponível)
+        async function extractDirectLink() {
+            try {
+                const response = await fetch('/api/video-info');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const video = data.data;
+                    
+                    // Tentar diferentes formatos de link
+                    const links = {
+                        'YouTube Embed': video.embedUrl,
+                        'Thumbnail': video.thumbnail,
+                        'Link Original': `https://www.blogger.com/video.g?token=${video.token || ''}`
+                    };
+                    
+                    let message = 'Links disponíveis:\n\n';
+                    for (const [key, value] of Object.entries(links)) {
+                        if (value) {
+                            message += `${key}: ${value}\n\n`;
+                        }
+                    }
+                    
+                    alert(message);
+                    
+                    // Tentar abrir o player do YouTube diretamente
+                    if (video.embedUrl) {
+                        window.open(video.embedUrl, '_blank');
+                    }
+                }
+            } catch (error) {
+                alert('Erro ao extrair links');
+            }
+        }
+        
+        // Carregar vídeo automaticamente ao abrir a página
+        window.onload = () => {
+            setTimeout(loadVideo, 500);
+        };
+    </script>
+</body>
+</html>
